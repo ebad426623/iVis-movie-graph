@@ -11,20 +11,43 @@ const cy = cytoscape({
       selector: 'node',
       style: {
         label: 'data(label)',
-        'background-color': '#666',
-        color: '#000',
+        color: '#000000',
+        'font-size': '11px',
+        'font-family': 'Segoe UI',
+        'text-wrap': 'wrap',
+        'text-max-width': '90px',
         'text-valign': 'center',
         'text-halign': 'center'
       }
     },
     {
+      selector: 'node[type = "person"]',
+      style: {
+        'background-color': '#8ea2ff',
+        shape: 'ellipse',
+        width: 80,
+        height: 80
+      }
+    },
+    {
+      selector: 'node[type = "movie"]',
+      style: {
+        'background-color': '#b7e4c7',
+        shape: 'ellipse',
+        width: 80,
+        height: 80
+      }
+    },
+    {
       selector: 'edge',
       style: {
-        width: 2,
+        width: 3,
         'line-color': '#999',
+        'font-size': '8px',
         'target-arrow-color': '#999',
         'target-arrow-shape': 'triangle',
         'curve-style': 'bezier',
+        'arrow-scale': 1.5,
         label: 'data(label)'
       }
     }
