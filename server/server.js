@@ -12,8 +12,10 @@ const user = process.env.NEO4J_USER;
 const password = process.env.NEO4J_PASSWORD;
 
 const driver = neo4j.driver(uri, neo4j.auth.basic(user, password));
-const { getSearchQuery } = require('./queries');
 
+
+const { getSearchQuery } = require('./queries');
+const { convertToCytoscape } = require('./cytoscapeConverter');
 
 app.get('/api/health', async (req, res) => {
     try {
@@ -43,9 +45,13 @@ app.get('/api/search', async (req, res) => {
         const query = getSearchQuery(relationshipDepth);
         const result = await session.run(query, { actorName, relationshipDepth });
 
+        const cypherResult = result.records.map(record => record.get('path'));
+        const cytoscapeData = convertToCytoscape(cypherResult);
+
         res.json({
             message: 'Query executed successfully',
-            recordCount: result.records.length
+            recordCount: result.records.length,
+            elements: cytoscapeData  
         });
     } catch (error) {
         res.status(500).json({
