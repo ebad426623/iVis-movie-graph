@@ -28,10 +28,7 @@ const cy = cytoscape({
         label: 'data(label)'
       }
     }
-  ],
-  layout: {
-    name: 'grid'
-  }
+  ]
 });
 
 searchForm.addEventListener('submit', async (event) => {
@@ -45,7 +42,17 @@ searchForm.addEventListener('submit', async (event) => {
         const response = await fetch(url);
         const data = await response.json();
 
-        console.log('Backend response:', data);
+        if (!response.ok) {
+            console.error('Backend error:', data);
+            return;
+        }
+
+        cy.elements().remove();
+        cy.add(data.elements);
+        cy.layout({
+        name: 'fcose'
+        }).run();
+
     } catch (error) {
         console.error('Request failed:', error);
     }
