@@ -6,6 +6,24 @@ function getSearchQuery(relationshipDepth) {
   `;
 }
 
+function getActorMoviesQuery() {
+  return `
+    MATCH path = (start:Person)-[:ACTED_IN]->(movie:Movie)
+    WHERE start.name = $actorName
+    RETURN path
+  `;
+}
+
+function getMovieActorsQuery() {
+  return `
+    MATCH path = (start:Movie)<-[:ACTED_IN]-(actor:Person)
+    WHERE start.title = $movieTitle
+    RETURN path
+  `;
+}
+
 module.exports = {
-  getSearchQuery
+  getSearchQuery,
+  getActorMoviesQuery,
+  getMovieActorsQuery
 };

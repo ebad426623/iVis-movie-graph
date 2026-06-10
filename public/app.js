@@ -73,7 +73,10 @@ searchForm.addEventListener('submit', async (event) => {
         cy.elements().remove();
         cy.add(data.elements);
         cy.layout({
-        name: 'fcose'
+        name: 'fcose',
+        idealEdgeLength: () => 200,
+        nodeRepulsion: () => 10000,
+        gravity: 0.25
         }).run();
 
     } catch (error) {

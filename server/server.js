@@ -14,7 +14,7 @@ const password = process.env.NEO4J_PASSWORD;
 const driver = neo4j.driver(uri, neo4j.auth.basic(user, password));
 
 
-const { getSearchQuery } = require('./queries');
+const { getSearchQuery, getActorMoviesQuery, getMovieActorsQuery } = require('./queries');
 const { convertToCytoscape } = require('./cytoscapeConverter');
 
 app.get('/api/health', async (req, res) => {
@@ -57,6 +57,60 @@ app.get('/api/search', async (req, res) => {
         res.status(500).json({
             ok: false,
             message: 'Failed to execute search query',
+            error: error.message
+        });
+    } finally {
+        await session.close();
+    }
+});
+
+app.get('/api/actor', async (req, res) => {
+    const actorName = req.query.actor;
+
+    const session = driver.session();
+    try {
+        const query = getActorMoviesQuery();
+        const result = await session.run(query, { actorName });
+
+        const cypherResult = result.records.map(record => record.get('path'));
+        const cytoscapeData = convertToCytoscape(cypherResult);
+
+        res.json({
+            message: 'Query executed successfully',
+            recordCount: result.records.length,
+            elements: cytoscapeData  
+        });
+    } catch (error) {
+        res.status(500).json({
+            ok: false,
+            message: 'Failed to execute actor query',
+            error: error.message
+        });
+    } finally {
+        await session.close();
+    }
+});
+
+app.get('/api/movie', async (req, res) => {
+    const movieTitle = req.query.movie;
+
+    const session = driver.session();
+    try {
+        const query = getMovieActorsQuery();
+        const result = await session.run(query, { movieTitle });
+
+        const cypherResult = result.records.map(record => record.get('path'));
+        const cytoscapeData = convertToCytoscape(cypherResult);
+
+        res.json({
+            message: 'Query executed successfully',
+            recordCount: result.records.length,
+            elements: cytoscapeData
+        });
+    } catch (error) {
+        res.status(500).json({
+            ok: false,
+            message: 'Failed to execute movie query',
             error: error.message
         });
     } finally {
