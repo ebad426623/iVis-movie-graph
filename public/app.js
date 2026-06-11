@@ -5,7 +5,6 @@ const cyContainer = document.getElementById('cy');
 
 const cy = cytoscape({
   container: cyContainer,
-  elements: [],
   style: [
     {
       selector: 'node',
@@ -83,61 +82,77 @@ const menu = cy.contextMenus({
   ]
 });
 
+const layoutUtils = cy.layoutUtilities({
+  idealEdgeLength: 200,
+});
+
 async function expandGraph(url) {
-    try {
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error('Expansion failed:', data);
+        return;
+    }
+
+    const newElements = data.elements.filter((element) => {
+      return cy.getElementById(element.data.id).length === 0;
+    });
+
+    if (newElements.length === 0) {
+      console.log('No new elements to add.');
+      return;
+    }
+
+    const added = cy.add(newElements);
+    const addedNodes = added.nodes();
+    layoutUtils.placeNewNodes(addedNodes);
+
+    cy.layout({
+        name: 'fcose',
+        randomize: false,
+        idealEdgeLength: () => 200,
+        nodeRepulsion: () => 10000,
+        gravity: 0.25
+    }).run();
+
+    console.log(`Added ${newElements.length} new elements to the graph.`);
+    console.log(newElements);
+
+  }
+  catch (error) {
+    console.error('Expansion request failed:', error);
+  }
+}
+
+searchForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const actorName = actorInput.value.trim();
+  const depth = parseInt(depthInput.value, 10);
+
+  const url = `/api/search?actor=${encodeURIComponent(actorName)}&depth=${depth}`;
+  try {
       const response = await fetch(url);
       const data = await response.json();
 
       if (!response.ok) {
-          console.error('Expansion failed:', data);
+          console.error('Backend error:', data);
           return;
       }
 
-      const newElements = data.elements.filter((element) => {
-        return cy.getElementById(element.data.id).length === 0;
-      });
+      cy.elements().remove();
+      cy.add(data.elements);
       
-      cy.add(newElements);
-
       cy.layout({
-          name: 'fcose',
-          idealEdgeLength: () => 200,
-          nodeRepulsion: () => 10000,
-          gravity: 0.25
+        name: 'fcose',
+        idealEdgeLength: () => 200,
+        nodeRepulsion: () => 10000,
+        gravity: 0.25
       }).run();
-    }
-    catch (error) {
-      console.error('Expansion request failed:', error);
-    }
-}
 
-searchForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    const actorName = actorInput.value.trim();
-    const depth = parseInt(depthInput.value, 10);
-
-    const url = `/api/search?actor=${encodeURIComponent(actorName)}&depth=${depth}`;
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error('Backend error:', data);
-            return;
-        }
-
-        cy.elements().remove();
-        cy.add(data.elements);
-        
-        cy.layout({
-          name: 'fcose',
-          idealEdgeLength: () => 200,
-          nodeRepulsion: () => 10000,
-          gravity: 0.25
-        }).run();
-
-    } catch (error) {
-        console.error('Request failed:', error);
-    }
+  } catch (error) {
+      console.error('Request failed:', error);
+  }
 });
