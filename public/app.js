@@ -54,6 +54,63 @@ const cy = cytoscape({
   ]
 });
 
+const menu = cy.contextMenus({
+  menuItems: [
+    {
+      id: 'show-movies',
+      content: 'Show movies',
+      selector: 'node[type = "person"]',
+      onClickFunction: function (event) {
+        const node = event.target || event.cyTarget;
+        const actorName = node.data('name') || node.data('label');
+        const url = `/api/actor?actor=${encodeURIComponent(actorName)}`;
+
+        expandGraph(url);
+      }
+    },
+    {
+      id: 'show-actors',
+      content: 'Show actors',
+      selector: 'node[type = "movie"]',
+      onClickFunction: function (event) {
+        const node = event.target || event.cyTarget;
+        const movieTitle = node.data('title') || node.data('label');
+        const url = `/api/movie?movie=${encodeURIComponent(movieTitle)}`;
+
+        expandGraph(url);
+      }
+    }
+  ]
+});
+
+async function expandGraph(url) {
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!response.ok) {
+          console.error('Expansion failed:', data);
+          return;
+      }
+
+      const newElements = data.elements.filter((element) => {
+        return cy.getElementById(element.data.id).length === 0;
+      });
+      
+      cy.add(newElements);
+
+      cy.layout({
+          name: 'fcose',
+          idealEdgeLength: () => 200,
+          nodeRepulsion: () => 10000,
+          gravity: 0.25
+      }).run();
+    }
+    catch (error) {
+      console.error('Expansion request failed:', error);
+    }
+}
+
 searchForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -72,11 +129,12 @@ searchForm.addEventListener('submit', async (event) => {
 
         cy.elements().remove();
         cy.add(data.elements);
+        
         cy.layout({
-        name: 'fcose',
-        idealEdgeLength: () => 200,
-        nodeRepulsion: () => 10000,
-        gravity: 0.25
+          name: 'fcose',
+          idealEdgeLength: () => 200,
+          nodeRepulsion: () => 10000,
+          gravity: 0.25
         }).run();
 
     } catch (error) {
