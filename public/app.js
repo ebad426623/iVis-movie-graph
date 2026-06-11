@@ -86,6 +86,23 @@ const layoutUtils = cy.layoutUtilities({
   idealEdgeLength: 200,
 });
 
+const viewUtils = cy.viewUtilities({
+    highlightStyles: [
+      {
+        node: {
+          'background-color': '#ffd166'
+        },
+        edge: {
+          'line-color': '#ffd166',
+          'source-arrow-color': '#ffd166',
+          'target-arrow-color': '#ffd166',
+          width: 3
+        }
+      }
+    ],
+  }
+);
+
 async function expandGraph(url) {
   try {
     const response = await fetch(url);
@@ -106,8 +123,10 @@ async function expandGraph(url) {
     }
 
     const added = cy.add(newElements);
-    const addedNodes = added.nodes();
-    layoutUtils.placeNewNodes(addedNodes);
+    viewUtils.removeHighlights();
+    viewUtils.highlight(added);
+    layoutUtils.placeNewNodes(added);
+
 
     cy.layout({
         name: 'fcose',
