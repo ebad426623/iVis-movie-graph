@@ -175,3 +175,9 @@ searchForm.addEventListener('submit', async (event) => {
       console.error('Request failed:', error);
   }
 });
+
+cy.on('click', event => {
+  if (event.target === cy) {
+    viewUtils.removeHighlights();
+  }
+});
