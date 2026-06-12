@@ -6,7 +6,7 @@ const cyContainer = document.getElementById('cy');
 const cy = cytoscape({
   container: cyContainer,
   style: [
-    {
+        {
       selector: 'node',
       style: {
         label: 'data(label)',
@@ -16,25 +16,43 @@ const cy = cytoscape({
         'text-wrap': 'wrap',
         'text-max-width': '90px',
         'text-valign': 'center',
-        'text-halign': 'center'
+        'text-halign': 'center',
+        'text-margin-y': 22,
+        shape: 'ellipse',
+        width: 80,
+        height: 80,
       }
     },
     {
       selector: 'node[type = "person"]',
       style: {
         'background-color': '#8ea2ff',
-        shape: 'ellipse',
-        width: 80,
-        height: 80
+        'background-image': `data:image/svg+xml,${encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">
+            <circle cx="40" cy="28" r="22" fill="white" opacity="0.85"/>
+            <text x="40" y="35" text-anchor="middle" font-size="22">👤</text>
+          </svg>
+        `)}`,
+        'background-fit': 'cover',
+        'background-clip': 'node',
+        'background-width': '100%',
+        'background-height': '100%',
       }
     },
     {
       selector: 'node[type = "movie"]',
       style: {
         'background-color': '#b7e4c7',
-        shape: 'ellipse',
-        width: 80,
-        height: 80
+        'background-image': `data:image/svg+xml,${encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">
+            <circle cx="40" cy="28" r="22" fill="white" opacity="0.85"/>
+            <text x="40" y="35" text-anchor="middle" font-size="22">🎬</text>
+          </svg>
+        `)}`,
+        'background-fit': 'cover',
+        'background-clip': 'node',
+        'background-width': '100%',
+        'background-height': '100%',
       }
     },
     {
