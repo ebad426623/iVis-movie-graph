@@ -2,6 +2,7 @@ const searchForm = document.getElementById('searchForm');
 const actorInput = document.getElementById('actorName');
 const depthInput = document.getElementById('depth');
 const cyContainer = document.getElementById('cy');
+const findClusterBtn = document.getElementById('findClusterBtn');
 
 const cy = cytoscape({
   container: cyContainer,
@@ -55,6 +56,27 @@ const cy = cytoscape({
         'background-height': '100%',
       }
     },
+
+    {
+      selector: 'node[type = "cluster"]',
+      style: {
+        label: 'data(label)',
+        shape: 'round-rectangle',
+        'background-color': '#f8f9fa',
+        'background-opacity': 0.25,
+        'border-color': '#ff6b6b',
+        'border-width': 3,
+        'border-style': 'dashed',
+        padding: '40px',
+        'text-valign': 'top',
+        'text-halign': 'center',
+        'text-margin-y': -10,
+        'font-size': '14px',
+        'font-weight': 'bold',
+        color: '#333'
+      }
+    },
+
     {
       selector: 'edge',
       style: {
@@ -96,6 +118,20 @@ const menu = cy.contextMenus({
 
         expandGraph(url);
       }
+    },
+    {
+      id: 'remove-cluster',
+      content: 'Remove cluster',
+      selector: 'node[type = "cluster"]',
+      onClickFunction: function (event) {
+      const clusterNode = event.target || event.cyTarget;
+  
+      clusterNode.children().move({
+        parent: null
+      });
+
+      clusterNode.remove();
+    }
     }
   ]
 });
@@ -153,10 +189,6 @@ async function expandGraph(url) {
         nodeRepulsion: () => 10000,
         gravity: 0.25
     }).run();
-
-    console.log(`Added ${newElements.length} new elements to the graph.`);
-    console.log(newElements);
-
   }
   catch (error) {
     console.error('Expansion request failed:', error);
@@ -181,7 +213,7 @@ searchForm.addEventListener('submit', async (event) => {
 
       cy.elements().remove();
       cy.add(data.elements);
-      
+
       cy.layout({
         name: 'fcose',
         idealEdgeLength: () => 200,
@@ -192,6 +224,49 @@ searchForm.addEventListener('submit', async (event) => {
   } catch (error) {
       console.error('Request failed:', error);
   }
+});
+
+findClusterBtn.addEventListener('click', async (event) => {
+  cy.nodes('[type = "cluster"]').children().move({
+    parent: null
+  });
+
+  cy.nodes('[type = "cluster"]').remove();
+
+  const clusters = cy.elements().not('node[type = "cluster"]').markovClustering();
+
+  clusters.forEach((cluster, index) => {
+    const nodes = cluster.nodes();
+
+    if (nodes.length < 2) {
+      return;
+    }
+
+    const clusterId = `cluster:${index + 1}`;
+
+    cy.add({
+      group: 'nodes',
+      data: {
+        id: clusterId,
+        label: `Cluster ${index + 1}`,
+        type: 'cluster'
+      }
+    });
+
+    nodes.forEach(node => {
+      node.move({
+        parent: clusterId
+      });
+    });
+  });
+
+  cy.layout({
+    name: 'fcose',
+    randomize: false,
+    idealEdgeLength: () => 200,
+    nodeRepulsion: () => 10000,
+    gravity: 0.25
+  }).run();
 });
 
 cy.on('click', event => {
